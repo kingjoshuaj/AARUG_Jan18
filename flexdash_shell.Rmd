@@ -1,0 +1,36 @@
+---
+title: "Zaco Dashboard"
+author: "JJK"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    source_code: embed
+---
+  
+```{r setup, include=FALSE}
+```
+
+Row {data-height=600}
+-------------------------------------
+  
+### Market Share by State 
+  
+```{r}
+```
+
+### Pizza Market Growth by State
+```{r}
+```
+
+Row
+-------------------------------------
+
+### Market Share Time Series
+
+```{r} 
+```
+
+### Raw Data
+
+```{r} 
+```

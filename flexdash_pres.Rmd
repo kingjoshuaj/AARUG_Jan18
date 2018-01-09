@@ -1,0 +1,214 @@
+---
+title: "An Overview of Flexdashboard"
+author: Josh King
+date: 1.11.18
+output:
+  ioslides_presentation:
+    widescreen: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, fig.align="center")
+library(plotly)
+library(ggplot2)
+library(leaflet)
+library(DT)
+library(crosstalk)
+```
+
+## Intro
+
+[Flexdashboard](http://rmarkdown.rstudio.com/flexdashboard/) is a package out of RStudio that allows users to easily create interactive visualizations to aid in communicating analysis results.
+
+> - Data provides the most value to any organization when actionable items are identified
+> - Dashboards are an effective means for technical or non-technical end users to view data
+> - [htmlwidgets](http://www.htmlwidgets.org/) provide a level of interactivity without requiring the dashboard to be hosted online
+> - What may be lost not having the dash on a [shiny](https://shiny.rstudio.com/) server can often be made up utilizing the [crosstalk](https://rstudio.github.io/crosstalk/) package
+>     - *Possible future presentation*
+
+#Zaco
+
+The greatest pizza/taco restaurant this country may never know  
+
+## Zaco
+
+```{r, out.width = "100%"}
+knitr::include_graphics('images/dashshot.png') 
+```
+
+## Getting Started
+
+Install the flexdashboard package from CRAN
+```{r eval=F, echo=T}
+install.packages("flexdashboard")
+```
+
+## Getting Started
+
+Install the flexdashboard package from CRAN
+```{r eval=F, echo=T}
+install.packages("flexdashboard")
+```
+
+To author a flexdashboard you can create an R Markdown document with the flexdashboard::flex_dashboard output format to begin with a template.
+
+## Getting Started
+
+Install the flexdashboard package from CRAN
+```{r eval=F, echo=T}
+install.packages("flexdashboard")
+```
+
+To author a flexdashboard you can create an R Markdown document with the flexdashboard::flex_dashboard output format to begin with a template.
+
+You can also create a general R Markdown document and set the output option:
+```{r eval=F, echo=T}
+output: flexdashboard::flex_dashboard
+```
+
+# The Look
+
+## Designing the dashboard
+
+Dashboards are divided into columns and rows with each of the output components indicated using the Level 3 Markdown header `r '###'`.
+
+1 Column Layout with 2 charts:
+```{r out.width = "85%"}
+knitr::include_graphics('images/chart1.png') 
+```
+
+## Designing the dashboard
+
+To include multiple of the same orientation (default = columns), include a Level 2 Markdown header `r paste('--------------')`.
+
+Change to 2 columns with the second having 2 charts
+```{r out.width = "85%"}
+knitr::include_graphics('images/chart2.png') 
+```
+
+## Designing the dashboard
+
+To change the orientation to row-wise, specify the option:
+```{r eval=FALSE, echo=T}
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+```
+```{r out.width = "75%"}
+knitr::include_graphics('images/chart3.png') 
+```
+
+# Zaco's Layout
+[Zaco Dashboard Shell](https://rawgit.com/kingjoshuaj/AARUG_Jan18/master/flexdash_shell.html)
+
+# The Data
+
+## Components of the dashboard
+
+The dashboard can include numerous means to presenting data or commentary
+
+> - Interactive JavaScript data visualizations based on [htmlwidgets](http://www.htmlwidgets.org/)
+> - R graphical output including base, lattice, and grid graphics
+> - Tabular data (with optional sorting, filtering, and paging)
+> - Value boxes for highlighting important summary data
+> - Gauges for displaying values on a meter within a specified range
+> - Text annotations 
+>     - uses rmarkdown syntax
+
+## htmlwidgets
+
+For each chart, utilize [htmlwidgets](http://gallery.htmlwidgets.org/) for the end user to have interactive capability.
+
+Some of my go-tos:
+
+- [DT](https://rstudio.github.io/DT/)
+
+## DT
+
+```{r, echo=T}
+datatable(iris)
+```
+
+# Zaco's Layout
+[Zaco Dashboard with DT](https://rawgit.com/kingjoshuaj/AARUG_Jan18/master/flexdash_1.html)
+
+## htmlwidgets
+
+For each chart, utilize [htmlwidgets](http://gallery.htmlwidgets.org/) for the end user to have interactive capability.
+
+Some of my go-tos:
+
+- [DT](https://rstudio.github.io/DT/)  
+- [plotly](https://plot.ly/r/)
+    - [ggplotly](https://plot.ly/ggplot2/)
+
+## plotly
+
+```{r, echo=T}
+plot_ly(data = iris, x = ~Sepal.Length, y = ~Petal.Length) %>% 
+  add_markers(color = ~Species)
+```
+
+## ggplotly
+
+```{r, echo=T, message=F}
+gg <- ggplot(mpg, aes(displ, hwy)) + geom_point() + 
+  stat_smooth()
+ggplotly(gg)
+```
+
+# Zaco's Layout
+- [Zaco Dashboard with plotly](https://rawgit.com/kingjoshuaj/AARUG_Jan18/master/flexdash_2.html)
+- [Zaco Dashboard with plotly & tabs](https://rawgit.com/kingjoshuaj/AARUG_Jan18/master/flexdash_3.html)
+
+## htmlwidgets
+
+For each chart, utilize [htmlwidgets](http://gallery.htmlwidgets.org/) for the end user to have interactive capability.
+
+Some of my go-tos:
+
+- [DT](https://rstudio.github.io/DT/)  
+- [plotly](https://plot.ly/r/)  
+    - [ggplotly](https://plot.ly/ggplot2/)  
+- [leaflet](http://rstudio.github.io/leaflet/)
+
+## leaflet
+
+```{r, echo=T}
+leaflet() %>% addProviderTiles(providers$OpenStreetMap) %>%
+addMarkers(lng=-83.744798 , lat=42.279238, popup="This Is Us")
+```
+
+# Zaco's Layout
+- [Zaco Dashboard with Choropleth](https://rawgit.com/kingjoshuaj/AARUG_Jan18/master/flexdash_4.html)
+
+## htmlwidgets
+
+For each chart, utilize [htmlwidgets](http://gallery.htmlwidgets.org/) for the end user to have interactive capability.
+
+Some of my go-tos:
+
+- [DT](https://rstudio.github.io/DT/)  
+- [plotly](https://plot.ly/r/)  
+    - [ggplotly](https://plot.ly/ggplot2/)  
+- [leaflet](http://rstudio.github.io/leaflet/)  
+- [crosstalk](https://rstudio.github.io/crosstalk/)  
+
+## crosstalk
+
+```{r, message=F}
+d <- SharedData$new(mtcars)
+scatterplot <- plot_ly(d, x = ~mpg, y = ~disp) %>%
+  add_markers(color = I("black"))
+
+subplot(
+  plot_ly(d, y = ~disp, color = I("black")) %>% 
+    add_boxplot(name = "overall"),
+  scatterplot, shareY = TRUE
+) %>% highlight("plotly_selected")
+```
+
+## Zaco's Layout
+[Zaco Dashboard with sidebar, social, theme](https://rawgit.com/kingjoshuaj/AARUG_Jan18/master/flexdash_demo.html)
+
+# Questions?

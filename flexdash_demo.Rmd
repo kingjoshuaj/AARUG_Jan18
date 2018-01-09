@@ -1,0 +1,144 @@
+---
+title: "Zaco Dashboard"
+author: "JJK"
+output: 
+  flexdashboard::flex_dashboard:
+    theme: spacelab
+    orientation: rows
+    social: ["twitter", "reddit", "github"]
+    source_code: embed
+---
+  
+```{r setup, include=FALSE}
+
+# # clear workspace
+rm(list=ls())
+
+# # set directory
+setwd('/Users/jjking/Documents/R/AARUG')
+
+# # library repository
+library(magrittr)
+library(dplyr)
+library(tidyr)
+library(tigris)
+library(leaflet)
+library(ggplot2)
+library(plotly)
+library(DT)
+
+######################################################
+# read data
+######################################################
+
+# # tigris states function for shapefile
+states <- states(cb = TRUE)
+# # limit to contiguous 48 + DC
+states <- states[!states$STUSPS %in% c('AK', 'AS', 'HI', 'PR', 'GU', 'MP', 'VI'), ] 
+
+# # dummy data for share of pizza and taco restaurants by quarter by state; random walk
+df <- tibble(q = rep(seq(as.Date('2046/1/1'), as.Date('2050/12/31'), by='3 months'), 49),
+             state = rep(states@data$STUSPS, 20),
+             pizza = rnorm(20*49),
+             tacos = rnorm(20*49)) %>%
+  group_by(state) %>%
+  arrange(q) %>%
+  mutate(pizza = cumsum(pizza),
+         tacos = cumsum(tacos))
+
+# # standardize random walk
+sdz <- function(x){((x-min(x))/(max(x)-min(x)))}
+df$pizza %<>% sdz
+df$tacos %<>% sdz
+
+# # join most recent quarter data to shape
+states@data %<>% 
+  cbind(., 
+        df %>% ungroup() %>% filter(q == max(df$q)) %>% select(pizza, tacos)) 
+
+######################################################
+# map addons
+######################################################
+
+# # store shape color
+pal <- colorNumeric("Oranges", domain=seq(0,1,.1))
+pal_leg <- colorNumeric("Oranges", domain=seq(0,100,10)) # for legend
+
+# # set hover popup text
+pop <- paste0(states$NAME,
+                  "<br>Pizza Share: ",
+                  sapply(states$pizza, function(x) ifelse(is.na(x), x, paste(round(x*100,1), "%", sep=""))),
+                  "<br>Taco Share: ",
+                  sapply(states$tacos, function(x) ifelse(is.na(x), x, paste(round(x*100,1), "%", sep="")))) %>%
+  lapply(htmltools::HTML)
+
+```
+
+About {.sidebar data-width=200} 
+-----------------------------------------------------------------------
+
+This is a [flexdashboard](http://rmarkdown.rstudio.com/flexdashboard/) sample for Zaco, a fictitious restaurant specializing in pizza and tacos using locally sourced seasonal ingredients, est 2046.
+
+[Flexdashboard](http://rmarkdown.rstudio.com/flexdashboard/) utilizes [R Markdown](http://rmarkdown.rstudio.com/) to publish a wide array of [htmlwidget](http://www.htmlwidgets.org/) interactive data visualizations as a self-contained or [shiny](http://shiny.rstudio.com/) dashboard. 
+
+***
+
+Created by Josh King for the [Ann Arbor R User Group Meetup](https://www.meetup.com/Ann-Arbor-R-User-Group/), 1.11.17.
+
+Row {data-height=600}
+-------------------------------------
+  
+### Market Share by State 
+  
+```{r}
+
+# # create leaflet map
+leaflet(states) %>% 
+  addProviderTiles(providers$CartoDB.DarkMatter, group = "Map") %>% # map tile overlay
+  # pizza poly
+  addPolygons(group='Pizza', label=~pop, color=~pal(pizza), weight=1, fillOpacity=.5, opacity=1) %>%
+  # taco poly
+    addPolygons(group='Tacos', label=~pop, color=~pal(tacos), weight=1, fillOpacity=.5, opacity=1) %>%
+  # Layers control
+  addLayersControl(
+    baseGroups = c("Pizza", "Tacos"),
+    options = layersControlOptions(collapsed = FALSE)) %>%
+  addLegend("bottomright", pal = pal_leg, values = seq(0, 100, 10), opacity = .8, title='% Share')
+```
+
+### Pizza Market Growth by State
+```{r}
+# # dummy data for total sales by state i've lived in
+df %>% filter(state %in% c('NY', 'SC', 'NC', 'DC', 'MI')) %>%
+  mutate(pizza = pizza*runif(1, 100000, 1000000),
+         tacos = tacos*runif(1, 100000, 1000000)) %>% 
+  plot_ly(x = ~q, y = ~pizza, z = ~state, color=~state) %>%
+  add_lines()
+```
+
+Row {.tabset .tabset-fade}
+-------------------------------------
+
+### Market Share Time Series
+
+```{r} 
+ggplotly(ggplot(df %>% group_by(q) %>%
+                  summarise(pizza = mean(pizza),
+                            tacos = mean(tacos)) %>%
+                  gather(key = 'category', value = 'share', pizza:tacos)) +
+           geom_line(aes(x=q, y=share, color=category)) + 
+           theme_minimal() + theme(legend.title=element_blank()))
+```
+
+### Raw Data
+
+```{r} 
+datatable(head(df, 100) %>% 
+           select(Quarter = q, State = state, Pizza_Share = pizza, Taco_Share = tacos),
+          rownames = F,
+          options = list(
+            columnDefs = list(list(className = 'dt-center', targets = 0:3)),
+            pageLength = 100,
+            dom = 'ft')) %>%
+   formatPercentage(c('Pizza_Share', 'Taco_Share'), 1)
+```
